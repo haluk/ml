@@ -3,7 +3,7 @@ package ml
 import java.io.{File, FileReader}
 import java.util.Properties
 
-import adt.Tree
+import adt.{Leaf, Node, Tree}
 
 
 /**
@@ -11,29 +11,23 @@ import adt.Tree
   */
 object Application {
 
-
-  /*
-    def summary(training: (List[String], CsvData)) = {
-      println("Attributes: " + training._1.mkString(", "))
-      println("Number of instances: " + training._2.size)
+  def traverse(root: Tree, decision: String = ""): Unit = root match {
+    case root: Node => {
+      var msg: String = "%s, H=%f, I=%f, (%s)".format(root.name, root.entropy, root.impurity, root.labelCounts.mkString(", "))
+      if (!decision.equals("")) {
+        msg = decision + ", " + msg
+      }
+      println(msg)
+      if (!root.children.isEmpty)
+        root.children.foreach(c => traverse(c._2, c._1))
+    }
+    case root: Leaf => {
+      val msg: String = "%s, %s, H=%f, (%s)"
+        .format(decision, root.labelCounts.maxBy(_._2)._1, root.entropy, root.labelCounts.mkString(", "))
+      println(msg)
     }
 
-    def printCsv(data: (List[String], CsvData)) = {
-      data._2.foreach(x => println(x.mkString(",")))
-    }
-
-    val trial = new Id3DecisionTreeoldAttempt
-    val training = trial.readCsv("/home/hd/IdeaProjects/ml/test1_yes.csv", null)
-  //  val training = trial.readCsv("/home/hd/IdeaProjects/ml/test1_no.csv", null)
-  //  val training = trial.readCsv("/home/hd/IdeaProjects/ml/test2.csv", null)
-    val label = "play"
-    val labelIdx = training._1.indexOf(label)
-  //  summary(training)
-  //  printCsv(training)
-
-  //  println(training._2(0))
-    trial.buildTree(training, training._2.toList.map(x => x(labelIdx)), label)
-  */
+  }
 
   def main(args: Array[String]): Unit = {
     val properties = new Properties
@@ -46,6 +40,8 @@ object Application {
 
     val root: Tree = id3.buildTree(id3.getData(), id3.getData(), attributes)
     println(root)
+    //    traverse(root.asInstanceOf[Node])
+    //    root.asInstanceOf[Node].children.foreach(c => traverse(c._2, c._1))
   }
 
 
