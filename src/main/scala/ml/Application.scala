@@ -32,24 +32,17 @@ object Application {
     }
   }
 
-  def exportRules(root: Node, acc: mutable.StringBuilder, prefix: mutable.StringBuilder): String = {
-    if (root.isInstanceOf[Node]) {
-      for (i <- root.children) {
-        var rule = new mutable.StringBuilder()
-        rule.append(root.name)
-        if (i._2.isInstanceOf[Node]) {
-          exportRules(i._2.asInstanceOf[Node], acc, prefix.append(root.name + "=" + i._1 + " and "))
-        }
-        else {
-          rule.append("=" + i._1 + " -> " + i._2.asInstanceOf[Leaf].name + "\n")
-          acc.append(prefix.toString + rule.toString)
-        }
-      }
-      prefix.clear()
-      acc.toString()
-    }
+  def exportRules(root: Node, tag: String): String = {
+    val ruleSet = new mutable.StringBuilder()
 
-    return acc.toString()
+    for (child <- root.children) {
+      if (child._2.isInstanceOf[Leaf])
+        ruleSet.append(tag + root.name + "=" + child._1 + " and " + child._2.asInstanceOf[Leaf].name + "\n")
+      else {
+        ruleSet.append(exportRules(child._2.asInstanceOf[Node], tag + root.name + "=" + child._1 + " and "))
+      }
+    }
+    return ruleSet.toString()
   }
 
   def main(args: Array[String]): Unit = {
@@ -62,13 +55,25 @@ object Application {
     attributes = attributes.filter(p => p != attributes(id3.classIndex))
 
     val root: Tree = id3.buildTree(id3.getData(), id3.getData(), attributes)
+    //    println(root)
+    //    val B = new Leaf("B", 0.0, Map("yes"-> 2, "no" -> 3))
+    //    val C = new Leaf("C", 0.0, Map("yes"-> 22, "no" -> 33))
+    //    val D = new Leaf("D", 0.0, Map("yes"-> 222, "no" -> 333))
+    //    val F = new Leaf("F", 0.0, Map("yes" -> 2222, "no" -> 3333))
+    //    val E = new Node("E", 0.1, 0.11, Map("yes" -> 0, "no" -> 1), List(("A5", F)))
+    //    val A = new Node("A", 0.9940, 0.7872, Map("yes" -> 12, "no" -> 10), List(("A1", B), ("A2", C), ("A3", D), ("A4", E)))
+    //    println(A)
+    //    println(exportRules(A, ""))
+    println(exportRules(root.asInstanceOf[Node], ""))
 
-    traverse(root, parentAttribute = root)
 
-    val rules = exportRules(root.asInstanceOf[Node], new mutable.StringBuilder(), new mutable.StringBuilder(""))
+
+    //    traverse(root, parentAttribute = root)
+
+    //    val rules = exportRules(root.asInstanceOf[Node], new mutable.StringBuilder(), new mutable.StringBuilder(""))
+    //    exportRules(root, parentAttribute = root)
     //    println(root.asInstanceOf[Node].children)
-    println(rules)
-
+    //    println(rules)
   }
 
 
