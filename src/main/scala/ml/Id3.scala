@@ -36,7 +36,6 @@ case class Id3(properties: Properties) {
       case true => new Data(records.head, records.tail.map(r => r.take(classIndex)), records.map(r => r(classIndex)))
       case false => new Data(properties.getProperty("attributes").split(delim), records.map(r => r.take(classIndex)), records.map(r => r(classIndex)))
     }
-
   }
 
   def subsetData(data: Data, columnIndex: Int, columnVal: String): Data = {
@@ -45,31 +44,20 @@ case class Id3(properties: Properties) {
   }
 
   def buildTree(training: Data, pruning: Data, attributes: Array[String]): Tree = {
-    println(attributes.mkString(","))
-    println(training.records.deep.mkString(","))
     val labelCounts = training.classVal.groupBy(identity).mapValues(_.size)
-    if (attributes.size == 0 || training.classVal.toSet.size == 1) // Case 1 [Needs refactoring]
-      return Leaf(name = "", labelCounts = labelCounts, decision = "")
+    if (attributes.size == 0 || training.classVal.toSet.size == 1)
+      return Leaf(name = labelCounts.maxBy(_._2)._1, labelCounts = labelCounts)
     else {
       val impurities = new Array[Double](attributes.size)
-      println("\t=======>")
       (0 until attributes.size).foreach(c => impurities(c) = Purity.impurity(training.records.map(r => r(c)), training.classVal))
       val selectedAttribute = impurities.zipWithIndex.min
       val name = attributes(selectedAttribute._2)
-      //      val entropy = Purity.entropy(columnValues(training, selectedAttribute._2))
       val entropy = Purity.entropy(training.classVal)
       val impurity = selectedAttribute._1
-      println(attributes.zip(impurities).mkString(","))
-      println("====")
 
-
-      return Node(name, entropy, impurity, labelCounts, "",
+      return Node(name, entropy, impurity, labelCounts,
         columnValues(training, selectedAttribute._2).toSet[String]
           .map(d => (d, buildTree(subsetData(training, selectedAttribute._2, d), pruning, attributes.filter(p => p != name)))))
-
-      //      return Node(name, entropy, impurity, labelCounts, List())
-
-
     }
   }
 

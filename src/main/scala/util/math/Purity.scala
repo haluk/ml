@@ -6,13 +6,11 @@ package util.math
 object Purity {
 
   def impurity(attr: Array[String], classLabel: Array[String]): Double = {
-    println(attr.mkString(","))
-    println(classLabel.mkString(","))
     val grouped = (attr zip classLabel).groupBy(x => x._1)
       .mapValues(v => v.map(i => i._2))
     val entropies = grouped.map { case (k, v) => (k, Purity.entropy(v), v.size) }
-    val impurity = entropies.map { case (k, e, s) => (k, e * (s / classLabel.length.toDouble)) }.map(_._2).sum
-    impurity // refactor
+
+    entropies.map { case (k, e, s) => (k, e * (s / classLabel.length.toDouble)) }.map(_._2).sum
   }
 
   def entropy[T](arr: Iterable[T]): Double = {
@@ -26,6 +24,5 @@ object Purity {
   def freqs[T](arr: List[T]): Map[T, Double] = {
     arr.groupBy(x => x).map(x => (x._1, x._2.length / arr.length.toDouble))
   }
-
 
 }

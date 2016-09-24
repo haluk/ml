@@ -5,28 +5,51 @@ import java.util.Properties
 
 import adt.{Leaf, Node, Tree}
 
+import scala.collection.mutable
+
 
 /**
   * Created by hd on 9/10/16.
   */
 object Application {
 
-  def traverse(root: Tree, decision: String = ""): Unit = root match {
+  def traverse(root: Tree, decision: String = "", depth: Int = 0, parentAttribute: Tree): Unit = root match {
     case root: Node => {
-      var msg: String = "%s, H=%f, I=%f, (%s)".format(root.name, root.entropy, root.impurity, root.labelCounts.mkString(", "))
+      var msg: String = "Decide-on = %s, H = %f, I = %f, (%s)".format(root.name, root.entropy, root.impurity, root.labelCounts.mkString(", "))
       if (!decision.equals("")) {
-        msg = decision + ", " + msg
+        msg = parentAttribute.asInstanceOf[Node].name + " = " + decision + ", " + msg
       }
+      print("\t" * depth)
       println(msg)
       if (!root.children.isEmpty)
-        root.children.foreach(c => traverse(c._2, c._1))
+        root.children.foreach(c => traverse(c._2, c._1, depth + 1, root))
     }
     case root: Leaf => {
-      val msg: String = "%s, %s, H=%f, (%s)"
-        .format(decision, root.labelCounts.maxBy(_._2)._1, root.entropy, root.labelCounts.mkString(", "))
+      print("\t" * depth)
+      val msg: String = parentAttribute.asInstanceOf[Node].name + " = %s, %s, H = %f, (%s)"
+        .format(decision, root.name, root.entropy, root.labelCounts.mkString(", "))
       println(msg)
     }
+  }
 
+  def exportRules(root: Node, acc: mutable.StringBuilder, prefix: mutable.StringBuilder): String = {
+    if (root.isInstanceOf[Node]) {
+      for (i <- root.children) {
+        var rule = new mutable.StringBuilder()
+        rule.append(root.name)
+        if (i._2.isInstanceOf[Node]) {
+          exportRules(i._2.asInstanceOf[Node], acc, prefix.append(root.name + "=" + i._1 + " and "))
+        }
+        else {
+          rule.append("=" + i._1 + " -> " + i._2.asInstanceOf[Leaf].name + "\n")
+          acc.append(prefix.toString + rule.toString)
+        }
+      }
+      prefix.clear()
+      acc.toString()
+    }
+
+    return acc.toString()
   }
 
   def main(args: Array[String]): Unit = {
@@ -39,9 +62,13 @@ object Application {
     attributes = attributes.filter(p => p != attributes(id3.classIndex))
 
     val root: Tree = id3.buildTree(id3.getData(), id3.getData(), attributes)
-    println(root)
-    //    traverse(root.asInstanceOf[Node])
-    //    root.asInstanceOf[Node].children.foreach(c => traverse(c._2, c._1))
+
+    traverse(root, parentAttribute = root)
+
+    val rules = exportRules(root.asInstanceOf[Node], new mutable.StringBuilder(), new mutable.StringBuilder(""))
+    //    println(root.asInstanceOf[Node].children)
+    println(rules)
+
   }
 
 
