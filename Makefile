@@ -6,5 +6,5 @@ build:
 run:
 	scala id3.jar $(properties)
 clean:
-	echo rm -rf *.*~ .idea target *.unprunedRuleSet *.prunedRuleSetUnsorted *.unprunedRuleSetTest *.prunedRuleSetTest *.prunedRuleSetSorted *.tree *.training *.test *.validation
-	rm -rf .idea *.unprunedRuleSet *.prunedRuleSetUnsorted *.unprunedRuleSetTest *.prunedRuleSetTest *.prunedRuleSetSorted *.tree *.training *.test *.validation
+	echo rm -rf *~ .idea target *.unprunedRuleSet *.prunedRuleSetUnsorted *.unprunedRuleSetTest *.prunedRuleSetTest *.prunedRuleSetSorted *.tree *.training *.test *.validation
+	rm -rf *~ .idea *.unprunedRuleSet *.prunedRuleSetUnsorted *.unprunedRuleSetTest *.prunedRuleSetTest *.prunedRuleSetSorted *.tree *.training *.test *.validation

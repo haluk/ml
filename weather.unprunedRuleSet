@@ -1,4 +1,0 @@
-outlook=Sunny and temperature=Hot -> No
-outlook=Sunny and temperature=Mild -> Yes
-outlook=Overcast -> Yes
-outlook=Rain -> Yes
