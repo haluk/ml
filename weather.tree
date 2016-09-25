@@ -1,0 +1,7 @@
+Decide-on = outlook, H = 0.650022, I = 0.333333, (No -> 1, Yes -> 5)
+	outlook = Sunny, Decide-on = temperature, H = 1.000000, I = 0.000000, (No -> 1, Yes -> 1)
+		temperature = Hot, No, H = 0.000000, (No -> 1)
+		temperature = Mild, Yes, H = 0.000000, (Yes -> 1)
+	outlook = Overcast, Yes, H = 0.000000, (Yes -> 3)
+	outlook = Rain, Yes, H = 0.000000, (Yes -> 1)
+

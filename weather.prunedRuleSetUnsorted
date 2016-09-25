@@ -1,0 +1,5 @@
+outlook=Sunny and temperature=Hot -> No (Accuracy: -1.0)
+outlook=Sunny and temperature=Mild -> Yes (Accuracy: -1.0)
+outlook=Overcast -> Yes (Accuracy: 1.0)
+outlook=Rain -> Yes (Accuracy: 0.5)
+

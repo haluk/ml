@@ -8,6 +8,7 @@ import adt.{Data, Leaf, Node, Tree}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Random
 
 
 /**
@@ -21,6 +22,10 @@ object Application {
     writer.write(msg + "\n")
     writer.close()
   }
+
+  def countMatches(str: String, query: String) = query.r.findAllMatchIn(str).length
+
+  def findHeight(str: List[String]): Int = str.map(l => countMatches(l, "\t")).max
 
   def traverse(root: Tree, decision: String = "", depth: Int = 0, parentAttribute: Tree, sb: StringBuilder): Unit = root match {
     case root: Node => {
@@ -73,7 +78,13 @@ object Application {
         return isMatch(rootNode.children.filter(c => c._1.equals(testRec._1(i))).toList(0)._2, testRec, attributes, classIndex)
       else {
         LOG.info("Unseen attribute value. Using majority rule to classify")
-        val majorityRule = rootNode.labelCounts.maxBy(_._2)._1
+        var majorityRule = ""
+        if (rootNode.labelCounts.values.toSet.size == 1) {
+          val majorityRule = Random.shuffle(rootNode.labelCounts.keys).head
+        }
+        else {
+          val majorityRule = rootNode.labelCounts.maxBy(_._2)._1
+        }
         if (majorityRule.equals(testRec._2))
           return (1, 0)
         else
@@ -129,18 +140,23 @@ object Application {
         val accWithI = calcMatchAccuracy(precedentsWithI, label, validation, attributes)
         val precedentsWithOutI = (prunedRules ++ precedents.drop(i + 1)).toArray
         val accWithOutI = calcMatchAccuracy(precedentsWithOutI, label, validation, attributes)
+        //        println(accWithI)
+        //        println("\t" + accWithOutI)
 
-
-        if (accWithI >= accWithOutI) {
+        if (accWithI >= accWithOutI || accWithI == -1) {
           prunedRules.append(precedents(i))
           return (prunedRules, accWithI)
         }
         else {
+          //          if (accWithOutI - accWithI <= 0.10) {
+          //            prunedRules.append(precedents(i))
+          //          }
           return (prunedRules, accWithOutI)
         }
       }
     }
   }
+
 
   def main(args: Array[String]): Unit = {
     val properties = new Properties
@@ -212,21 +228,31 @@ object Application {
     LOG.info(baseFileName + ".tree" + " is written")
     sb.clear()
 
+    // Test on pruned rules
+    var testPredPP: (Int, Int) = (0, 0)
+    for (t <- test.records.zip(test.classVal)) {
+      for (x <- allPrunedSorted.map(i => (i._1, i._2))) {
+        val attribute = x._1.map(i => i.split("=")(0)).toList
+        val attributeVal = x._1.map(i => i.split("=")(1)).toList
+        val attributeIdx = attribute.map(i => attributes.indexOf(i))
+        val checkMatch = attributeIdx.map(t._1).zipWithIndex
+          .map(i => i._1.equals(attributeVal(i._2))).fold(true)((a, b) => a && b)
+        if (checkMatch) {
+          if (t._2.equals(x._2))
+            testPredPP = (testPredPP._1 + 1, testPredPP._2)
+          else
+            testPredPP = (testPredPP._1, testPredPP._2 + 1)
+        }
+      }
+    }
+    LOG.info("Accuracy of pruned rule set on test data " + (testPredPP._1.toDouble / (testPredPP._1 + testPredPP._2)))
+
     id3.exportToFile(trainingPrime, "training")
     id3.exportToFile(test, "test")
     id3.exportToFile(validation, "validation")
 
-    //    println("Sorted By Accuracy")
-    //    val allPrunedSorted = allPruned.sortWith(_._3 > _._3)
-    //    for (x <- allPrunedSorted) {
-    //      println(x._1 + " Label: " + x._2 + " Pruned Rule Accuracy: " + x._3)
-    //    }
-    //
-    //    println("Testing after pruning")
-    //    for(x <- allPrunedSorted) {
-    //      println(x._1 + " Label: " + x._2 + " Pruned Rule Accuracy: " + calcMatchAccuracy(x._1.toArray, x._2, test, attributes))
-    //    }
-
-
+    val treeOutput = scala.io.Source.fromFile(baseFileName + ".tree").mkString
+    LOG.info("Number of nodes: " + countMatches(treeOutput, "Decide-on"))
+    LOG.info("Height of the decision tree: " + findHeight(treeOutput.split("\n").toList))
   }
 }
