@@ -168,7 +168,10 @@ Since ${ I }^{ \prime  }({ a }_{ 1 })<{ I }^{ \prime  }({ a }_{ 2 })$, \textit{I
 \section{Question 4 and 5}
 
 \subsection{Introduction}
-We've implemented the ID3 algorithm with impurity as splitting criterion along with rule post-pruning. We used 4 data sets from the UC Irvine Machine Learning Repository. In this report, we present the results of the ID3 algorithm on these data sets.
+We've implemented the ID3 algorithm with impurity as splitting
+criterion along with rule post-pruning. We used 4 data sets from the
+UC Irvine Machine Learning Repository. In this report, we present the
+results of the ID3 algorithm on these data sets.
 
 \subsection{Data}
 4 data sets were obtained from UC Irvine Machine Learning
@@ -227,15 +230,27 @@ continued with the next example.
 
 After running the program the following files can be found:
 \begin{itemize}
-   \item ``.validation'' contains the examples that were used for pruning the tree.
-   \item ``.test'' contains the examples that the tree and the pruned rule set were tested on.
-   \item ``.training'' contains the examples left in the training set after test and validation sets are formed.
-   \item ``.tree'' contains the tree built by ID3 algorithm, each tab signifies added depth to the tree with a chosen attribute. The attribute used to split the data is indicated by "Decide-on", entropy of the dataset at that node and the impurity of the chosen attribute as well as the number of class members at that node are reported.
-   \item ``.prunedRuleSetSorted'' gives the accuracy of each pruned rule on the validation set in sorted order by accuracy
-   \item ``.prunedRuleSetUnsorted'' gives the accuracy of each pruned rule on the validation set   
-   \item ``.prunedRuleSetTest'' gives the accuracy of each pruned rule on the test set
-   \item ``.unprunedRuleSet'' gives the origin rule set extracted from the built tree
-   \item ``.unprunedRuleSetTest'' gives the test accuracies of unpruned rules  
+   \item ``.validation'' contains the examples that were used for
+pruning the tree.
+   \item ``.test'' contains the examples that the tree and the pruned
+rule set were tested on.
+   \item ``.training'' contains the examples left in the training set
+after test and validation sets are formed.
+   \item ``.tree'' contains the tree built by ID3 algorithm, each tab
+signifies added depth to the tree with a chosen attribute. The
+attribute used to split the data is indicated by "Decide-on", entropy
+of the dataset at that node and the impurity of the chosen attribute
+as well as the number of class members at that node are reported.
+   \item ``.prunedRuleSetSorted'' gives the accuracy of each pruned
+rule on the validation set in sorted order by accuracy
+   \item ``.prunedRuleSetUnsorted'' gives the accuracy of each pruned
+rule on the validation set
+   \item ``.prunedRuleSetTest'' gives the accuracy of each pruned rule
+on the test set
+   \item ``.unprunedRuleSet'' gives the origin rule set extracted from
+the built tree
+   \item ``.unprunedRuleSetTest'' gives the test accuracies of
+unpruned rules
 \end{itemize}
 
 \subsection{Results}
