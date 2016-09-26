@@ -140,17 +140,12 @@ object Application {
         val accWithI = calcMatchAccuracy(precedentsWithI, label, validation, attributes)
         val precedentsWithOutI = (prunedRules ++ precedents.drop(i + 1)).toArray
         val accWithOutI = calcMatchAccuracy(precedentsWithOutI, label, validation, attributes)
-        //        println(accWithI)
-        //        println("\t" + accWithOutI)
 
-        if (accWithI >= accWithOutI || accWithI == -1) {
+        if (accWithI >= accWithOutI || (accWithI == -1 || accWithOutI <= 0.9)) {
           prunedRules.append(precedents(i))
           return (prunedRules, accWithI)
         }
         else {
-          //          if (accWithOutI - accWithI <= 0.10) {
-          //            prunedRules.append(precedents(i))
-          //          }
           return (prunedRules, accWithOutI)
         }
       }
@@ -167,92 +162,111 @@ object Application {
     var attributes = id3.properties.getProperty("attributes").split(id3.delim).map(x => x.trim)
     attributes = attributes.filter(p => p != attributes(id3.classIndex))
 
-    val data = id3.getData()
-    val (training, test) = id3.splitDataSet(data, id3.properties.getProperty("test.size").toInt)
-    val (trainingPrime, validation) = id3.splitDataSet(training, id3.properties.getProperty("validation.size").toInt)
-    id3.summary(trainingPrime)
+    val totalItr = id3.properties.getProperty("total.itr").toInt
+    var testAccurAll = new ArrayBuffer[Double]()
+    var prunedAccurAll = new ArrayBuffer[Double]()
+    var numOfNodes = new ArrayBuffer[Double]()
+    var numOfHeight = new ArrayBuffer[Double]()
+    for (itr <- 0 until totalItr) {
+      val data = id3.getData()
+      val (training, test) = id3.splitDataSet(data, id3.properties.getProperty("test.size").toInt)
+      val (trainingPrime, validation) = id3.splitDataSet(training, id3.properties.getProperty("validation.size").toInt)
+      id3.summary(trainingPrime)
 
-    LOG.info("Building ID3 on training data")
-    val root: Tree = id3.buildTree(trainingPrime, trainingPrime, attributes)
+      LOG.info("Building ID3 on training data")
+      val root: Tree = id3.buildTree(trainingPrime, trainingPrime, attributes)
 
-    val tfs = testAccuracy(root, test, attributes, id3.classIndex).fold((0, 0))((i, j) => (i._1 + j._1, i._2 + j._2))
-    val accuracy = tfs._1 / (tfs._1 + tfs._2).toDouble
-    LOG.info("Accuracy of ID3 on test data: " + accuracy)
-    LOG.info("Extracting rules from the tree")
-    val ruleSet = exportRules(root.asInstanceOf[Node], "").split("\n")
+      val tfs = testAccuracy(root, test, attributes, id3.classIndex).fold((0, 0))((i, j) => (i._1 + j._1, i._2 + j._2))
+      val accuracy = tfs._1 / (tfs._1 + tfs._2).toDouble
+      testAccurAll.append(accuracy)
+      LOG.info("Accuracy of ID3 on test data: " + accuracy)
+      LOG.info("Extracting rules from the tree")
+      val ruleSet = exportRules(root.asInstanceOf[Node], "").split("\n")
 
-    writeStringToFile(ruleSet.mkString("\n"), baseFileName + ".unprunedRuleSet")
-    LOG.info(baseFileName + ".unprunedRuleSet" + " is written")
+      writeStringToFile(ruleSet.mkString("\n"), baseFileName + ".unprunedRuleSet")
+      LOG.info(baseFileName + ".unprunedRuleSet" + " is written")
 
-    val sb = new mutable.StringBuilder()
+      val sb = new mutable.StringBuilder()
 
-    val allPruned = postPruning(ruleSet, validation, attributes)
-    for (pruned <- allPruned) {
-      sb.append(pruned._1.mkString(" and ") + " -> " + pruned._2 + " (Accuracy: " + pruned._3 + ")")
-      sb.append("\n")
-    }
-    writeStringToFile(sb.toString(), baseFileName + ".prunedRuleSetUnsorted")
-    LOG.info(baseFileName + ".prunedRuleSetUnsorted" + " is written")
-    sb.clear()
+      val allPruned = postPruning(ruleSet, validation, attributes)
+      for (pruned <- allPruned) {
+        sb.append(pruned._1.mkString(" and ") + " -> " + pruned._2 + " (Accuracy: " + pruned._3 + ")")
+        sb.append("\n")
+      }
+      writeStringToFile(sb.toString(), baseFileName + ".prunedRuleSetUnsorted")
+      LOG.info(baseFileName + ".prunedRuleSetUnsorted" + " is written")
+      sb.clear()
 
 
-    for (unprunedRule <- ruleSet) {
-      val precedents = unprunedRule.split("->")(0).trim
-      val label = unprunedRule.split("->")(1).trim
-      sb.append(unprunedRule + " (Accuracy: " + calcMatchAccuracy(precedents.split(" and "), label, test, attributes) + ")")
-      sb.append("\n")
-    }
-    writeStringToFile(sb.toString(), baseFileName + ".unprunedRuleSetTest")
-    LOG.info(baseFileName + ".unprunedRuleSetTest" + " is written")
-    sb.clear()
+      for (unprunedRule <- ruleSet) {
+        val precedents = unprunedRule.split("->")(0).trim
+        val label = unprunedRule.split("->")(1).trim
+        sb.append(unprunedRule + " (Accuracy: " + calcMatchAccuracy(precedents.split(" and "), label, test, attributes) + ")")
+        sb.append("\n")
+      }
+      writeStringToFile(sb.toString(), baseFileName + ".unprunedRuleSetTest")
+      LOG.info(baseFileName + ".unprunedRuleSetTest" + " is written")
+      sb.clear()
 
-    for (pruned <- allPruned) {
-      sb.append(pruned._1.mkString(" and ") + " -> " + pruned._2 + " (Accuracy: " + calcMatchAccuracy(pruned._1.toArray, pruned._2, test, attributes) + ")")
-      sb.append("\n")
-    }
-    writeStringToFile(sb.toString(), baseFileName + ".prunedRuleSetTest")
-    LOG.info(baseFileName + ".prunedRuleSetTest" + " is written")
-    sb.clear()
+      for (pruned <- allPruned) {
+        sb.append(pruned._1.mkString(" and ") + " -> " + pruned._2 + " (Accuracy: " + calcMatchAccuracy(pruned._1.toArray, pruned._2, test, attributes) + ")")
+        sb.append("\n")
+      }
+      writeStringToFile(sb.toString(), baseFileName + ".prunedRuleSetTest")
+      LOG.info(baseFileName + ".prunedRuleSetTest" + " is written")
+      sb.clear()
 
-    val allPrunedSorted = allPruned.sortWith(_._3 > _._3)
-    for (x <- allPrunedSorted) {
-      sb.append(x._1.mkString(" and ") + " -> " + x._2 + " (Accuracy: " + x._3 + ")")
-      sb.append("\n")
-    }
-    writeStringToFile(sb.toString(), baseFileName + ".prunedRuleSetSorted")
-    LOG.info(baseFileName + ".prunedRuleSetSorted" + " is written")
-    sb.clear()
+      val allPrunedSorted = allPruned.sortWith(_._3 > _._3)
+      for (x <- allPrunedSorted) {
+        sb.append(x._1.mkString(" and ") + " -> " + x._2 + " (Accuracy: " + x._3 + ")")
+        sb.append("\n")
+      }
+      writeStringToFile(sb.toString(), baseFileName + ".prunedRuleSetSorted")
+      LOG.info(baseFileName + ".prunedRuleSetSorted" + " is written")
+      sb.clear()
 
-    traverse(root, parentAttribute = root, sb = sb)
-    writeStringToFile(sb.toString(), baseFileName + ".tree")
-    LOG.info(baseFileName + ".tree" + " is written")
-    sb.clear()
+      traverse(root, parentAttribute = root, sb = sb)
+      writeStringToFile(sb.toString(), baseFileName + ".tree")
+      LOG.info(baseFileName + ".tree" + " is written")
+      sb.clear()
 
-    // Test on pruned rules
-    var testPredPP: (Int, Int) = (0, 0)
-    for (t <- test.records.zip(test.classVal)) {
-      for (x <- allPrunedSorted.map(i => (i._1, i._2))) {
-        val attribute = x._1.map(i => i.split("=")(0)).toList
-        val attributeVal = x._1.map(i => i.split("=")(1)).toList
-        val attributeIdx = attribute.map(i => attributes.indexOf(i))
-        val checkMatch = attributeIdx.map(t._1).zipWithIndex
-          .map(i => i._1.equals(attributeVal(i._2))).fold(true)((a, b) => a && b)
-        if (checkMatch) {
-          if (t._2.equals(x._2))
-            testPredPP = (testPredPP._1 + 1, testPredPP._2)
-          else
-            testPredPP = (testPredPP._1, testPredPP._2 + 1)
+      // Test on pruned rules
+      var testPredPP: (Int, Int) = (0, 0)
+      for (t <- test.records.zip(test.classVal)) {
+        for (x <- allPrunedSorted.map(i => (i._1, i._2))) {
+          val attribute = x._1.map(i => i.split("=")(0)).toList
+          val attributeVal = x._1.map(i => i.split("=")(1)).toList
+          val attributeIdx = attribute.map(i => attributes.indexOf(i))
+          val checkMatch = attributeIdx.map(t._1).zipWithIndex
+            .map(i => i._1.equals(attributeVal(i._2))).fold(true)((a, b) => a && b)
+          if (checkMatch) {
+            if (t._2.equals(x._2))
+              testPredPP = (testPredPP._1 + 1, testPredPP._2)
+            else
+              testPredPP = (testPredPP._1, testPredPP._2 + 1)
+          }
         }
       }
+      val postPruningAccuracy = testPredPP._1.toDouble / (testPredPP._1 + testPredPP._2)
+      prunedAccurAll.append(postPruningAccuracy)
+      LOG.info("Accuracy of pruned rule set on test data " + postPruningAccuracy)
+
+      id3.exportToFile(trainingPrime, "training")
+      id3.exportToFile(test, "test")
+      id3.exportToFile(validation, "validation")
+
+      val treeOutput = scala.io.Source.fromFile(baseFileName + ".tree").mkString
+      val numNode = countMatches(treeOutput, "Decide-on")
+      numOfNodes.append(numNode)
+      val height = findHeight(treeOutput.split("\n").toList)
+      numOfHeight.append(height)
+      LOG.info("Number of nodes: " + numNode)
+      LOG.info("Height of the decision tree: " + height)
     }
-    LOG.info("Accuracy of pruned rule set on test data " + (testPredPP._1.toDouble / (testPredPP._1 + testPredPP._2)))
 
-    id3.exportToFile(trainingPrime, "training")
-    id3.exportToFile(test, "test")
-    id3.exportToFile(validation, "validation")
-
-    val treeOutput = scala.io.Source.fromFile(baseFileName + ".tree").mkString
-    LOG.info("Number of nodes: " + countMatches(treeOutput, "Decide-on"))
-    LOG.info("Height of the decision tree: " + findHeight(treeOutput.split("\n").toList))
+    LOG.info("Avg. test accuracy: " + testAccurAll.sum / testAccurAll.size)
+    LOG.info("Avg. pruned rule set accuracy: " + prunedAccurAll.sum / prunedAccurAll.size)
+    LOG.info("Avg. number of nodes: " + numOfNodes.sum / numOfNodes.size.toDouble)
+    LOG.info("Avg. height: " + numOfHeight.sum / numOfHeight.size.toDouble)
   }
 }
