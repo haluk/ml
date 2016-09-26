@@ -168,7 +168,7 @@ Since ${ I }^{ \prime  }({ a }_{ 1 })<{ I }^{ \prime  }({ a }_{ 2 })$, \textit{I
 \section{Question 4 and 5}
 
 \subsection{Introduction}
-This is time for all good men to come to the aid of their party!
+We've implemented the ID3 algorithm with impurity as splitting criterion along with rule post-pruning. We used 4 data sets from the UC Irvine Machine Learning Repository. In this report, we present the results of the ID3 algorithm on these data sets.
 
 \subsection{Data}
 4 data sets were obtained from UC Irvine Machine Learning
@@ -205,15 +205,16 @@ data sets can be found in the Table \ref{table:datasetsummary}.
 
 \subsection{Implementation}
 We implemented ID3 algorithm with post-pruning with Scala (source code
-available in archive). For each data set, we, first, reserved more than
-randomly 30 examples for testing, then from the remaining training set
-we extracted at least randomly 30 examples for validation. We take
-these values as inputs to the ``.properties'' file. After building the
-tree, we extracted the rule set by traversing from the root to each
-leaf. After obtaining each leaf, we used the validation set to prune
-these rules. We dropped a precedent in a rule, if when dropped the
-modified rule had better accuracy on the validation set. We sorted the
-rules according to their validation accuracy in a decreasing manner.
+available in archive). For each data set, we, first, reserved more
+than 30 examples sampled randomly without replacement for testing,
+then from the remaining training set we extracted at least 30 examples
+randomly without replacement for validation. We take these values as
+inputs to the ``.properties'' file. After building the tree, we
+extracted the rule set by traversing from the root to each leaf. After
+obtaining each leaf, we used the validation set to prune these
+rules. We dropped a precedent in a rule, if when dropped the modified
+rule had better accuracy on the validation set. We sorted the rules
+according to their validation accuracy in a decreasing manner.
 
 While predicting the classes of the examples in the test set, we
 traversed the tree with each example and whenever an example had an
@@ -224,7 +225,26 @@ the rule with highest accuracy. When an example had matching attribute
 values with a rule, we used that rule to predict the class, and
 continued with the next example.
 
+After running the program the following files can be found:
+\begin{itemize}
+   \item ``.validation'' contains the examples that were used for pruning the tree.
+   \item ``.test'' contains the examples that the tree and the pruned rule set were tested on.
+   \item ``.training'' contains the examples left in the training set after test and validation sets are formed.
+   \item ``.tree'' contains the tree built by ID3 algorithm, each tab signifies added depth to the tree with a chosen attribute. The attribute used to split the data is indicated by "Decide-on", entropy of the dataset at that node and the impurity of the chosen attribute as well as the number of class members at that node are reported.
+   \item ``.prunedRuleSetSorted'' gives the accuracy of each pruned rule on the validation set in sorted order by accuracy
+   \item ``.prunedRuleSetUnsorted'' gives the accuracy of each pruned rule on the validation set   
+   \item ``.prunedRuleSetTest'' gives the accuracy of each pruned rule on the test set
+   \item ``.unprunedRuleSet'' gives the origin rule set extracted from the built tree
+   \item ``.unprunedRuleSetTest'' gives the test accuracies of unpruned rules  
+\end{itemize}
+
 \subsection{Results}
+We observed comparable heights obtained for different datasets. Trees
+had heights ranging between 5 and 8 on average over 100 iterations
+even though the attribute values change between 7 and 16. However, the
+number of nodes ranged between 21 and 320 on average over 100
+iterations (Table \ref{table:datasetsummary}, Table \ref{table:performance}).
+
 \begin{table}[H]
   \centering
   \begin{small}
@@ -237,34 +257,51 @@ continued with the next example.
       \textbf{Avg. accuracy of pruned rules on test data} & 0.943                   & 0.984            & 0.861                & 0.996            \\ \hline
     \end{tabular}
 \end{small}
-\caption{Results of 100 iterations.}
+\caption{Results of 100 iterations (Validation size = 30, Test size = 30).}
 \label{table:performance}
 \end{table}
+
+We always observed higher accuracies for the pruned rule set than the
+tree. This means that overfitting took place while building the tree,
+i.e we can find an alternative hypothesis with higher training but
+lower test error. Pruning the rules improved accuracy (Figures
+\ref{fig:house-comp}, Figure \ref{fig:monk-comp}, and Figure
+\ref{fig:tictactoe-comp}).
 
 \begin{figure}[H]
   \centering
   \includegraphics[scale=0.5]{img/house-votes-84-comparison}
-  \caption{Accuracy comparison of tree and post pruning on house-votes-84 test data with changing training data size}
+  \caption{Accuracy comparison of tree and post pruning on house-votes-84 test data with changing training data size.}
   \label{fig:house-comp}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[scale=0.5]{img/monks-1-comparison}
-  \caption{Accuracy comparison of tree and post pruning on monks-1 test data with changing training data size}
+  \caption{Accuracy comparison of tree and post pruning on monks-1 test data with changing training data size.}
   \label{fig:monk-comp}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[scale=0.5]{img/tic-tac-toe-comparison}
-  \caption{Accuracy comparison of tree and post pruning on tic-tac-toe test data with changing training data size}
+  \caption{Accuracy comparison of tree and post pruning on tic-tac-toe test data with changing training data size.}
   \label{fig:tictactoe-comp}
 \end{figure}
 
 
 
 \subsection{Discussion}\label{discussion}
+We observed comparable tree heights and different node numbers for
+different datasets. All trees except for ``Congressional Voting'' have
+heights that are about the same as their attribute numbers. This would
+mean for the ``Congressional Voting'' data set, that 7 attributes are
+enough to classify an example despite the larger available attribute
+number. The number of nodes in ``Tic-Tac-Toe'' and ``Nursery'' data sets
+were much larger than in ``Monks-I'' and ``Congressional Votes'' data sets,
+this is commensurate with the number of available values for
+attributes in each data set (Table \ref{table:datasetsummary}, Table \ref{table:performance}).
+
 During implementation, we were faced with a number of issues. First,
 during prediction of novel examples using the tree, some of the
 attributes had values in test data that were not present in our
