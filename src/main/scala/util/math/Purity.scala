@@ -1,7 +1,7 @@
 package util.math
 
 /**
-  * Created by hd on 9/7/16.
+  * Created by zeynep and haluk on 9/7/16.
   */
 object Purity {
 

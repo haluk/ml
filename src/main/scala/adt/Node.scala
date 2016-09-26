@@ -1,7 +1,7 @@
 package adt
 
 /**
-  * Created by hd on 9/6/16.
+  * Created by zeynep and haluk on 9/6/16.
   */
 sealed abstract class Tree
 

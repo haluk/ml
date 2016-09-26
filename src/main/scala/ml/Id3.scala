@@ -10,7 +10,7 @@ import util.math.Purity
 import scala.util.Random
 
 /**
-  * Created by hd on 9/16/16.
+  * Created by zeynep and haluk on 9/16/16.
   */
 case class Id3(properties: Properties) {
 

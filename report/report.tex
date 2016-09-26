@@ -204,7 +204,25 @@ data sets can be found in the Table \ref{table:datasetsummary}.
 \end{table}
 
 \subsection{Implementation}
-In this section we describe the results.
+We implemented ID3 algorithm with post-pruning with Scala (source code
+available in archive). For each data set, we, first, reserved more than
+randomly 30 examples for testing, then from the remaining training set
+we extracted at least randomly 30 examples for validation. We take
+these values as inputs to the ``.properties'' file. After building the
+tree, we extracted the rule set by traversing from the root to each
+leaf. After obtaining each leaf, we used the validation set to prune
+these rules. We dropped a precedent in a rule, if when dropped the
+modified rule had better accuracy on the validation set. We sorted the
+rules according to their validation accuracy in a decreasing manner.
+
+While predicting the classes of the examples in the test set, we
+traversed the tree with each example and whenever an example had an
+attribute value unmatched in the tree we used majority voting (see
+\ref{discussion}). Prediction with pruned rule set was done by
+checking each example against the rules in the rule set beginning with
+the rule with highest accuracy. When an example had matching attribute
+values with a rule, we used that rule to predict the class, and
+continued with the next example.
 
 \subsection{Results}
 \begin{table}[H]
@@ -246,17 +264,18 @@ In this section we describe the results.
 
 
 
-\subsection{Discussion}
+\subsection{Discussion}\label{discussion}
 During implementation, we were faced with a number of issues. First,
 during prediction of novel examples using the tree, some of the
 attributes had values in test data that were not present in our
-tree. For example, while our tree could split the data into ``hot'' and
-``cool'' values of temperature attribute, it couldn't decide which
-subset an example with ``mild'' temperature value belonged to (depicted as in Figure \ref{fig:majority-vote})
-. In that case, we opted for sending the example as deep
-in the tree as possible, then classifying the example as a member of
-the group with highest frequency in that node. If there were more than
-one classes with the heighest frequency we picked the class randomly.
+tree. For example, while our tree could split the data into ``hot''
+and ``cool'' values of temperature attribute, it couldn't decide which
+subset an example with ``mild'' temperature value belonged to
+(depicted as in Figure \ref{fig:majority-vote}) . In that case, we
+opted for sending the example as deep in the tree as possible, then
+classifying the example as a member of the group with highest
+frequency in that node. If there were more than one classes with the
+highest frequency we picked the class randomly.
 
 \begin{figure}[H]
   \centering
@@ -279,12 +298,10 @@ higher accuracy than the unmodified rule.
 To gauge overfitting, we decreased the size of the training set. We
 observed a steady decrease in the average accuracy of both the tree
 and the pruned rule set in ``Monks-1'' data, although the decrease was
-more obvious in the tree predictions as depicted in Figure \ref{fig:monk-comp}. This could mean that
-overfitting occurs when the data is not sufficiently large because the
-algorithm is not presented with enough examples to detect true
-rules. However, this was not the case for other datasets with
-comparable sizes.
-
-\section{Appendix}
+more obvious in the tree predictions as depicted in Figure
+\ref{fig:monk-comp}. This could mean that overfitting occurs when the
+data is not sufficiently large because the algorithm is not presented
+with enough examples to detect true rules. However, this was not the
+case for other datasets with comparable sizes.
 
 \end{document}

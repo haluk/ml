@@ -12,7 +12,7 @@ import scala.util.Random
 
 
 /**
-  * Created by hd on 9/10/16.
+  * Created by zeynep and haluk on 9/10/16.
   */
 object Application {
   val LOG = Logger.getLogger(Application.getClass.getName)
